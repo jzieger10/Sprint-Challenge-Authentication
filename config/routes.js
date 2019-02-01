@@ -1,8 +1,7 @@
 const axios = require("axios");
 const bcrypt = require("bcryptjs");
-// const knex = require("knex");
-// const knexConfig = require("../knexfile.js");
 const db = require("../database/dbConfig.js");
+const jwt = require("jsonwebtoken");
 
 const { authenticate } = require("../auth/authenticate");
 
@@ -31,8 +30,46 @@ function register(req, res) {
 		);
 }
 
+function generateToken(user) {
+	console.log("in generateToken");
+	const payload = {
+		username: user.username,
+	};
+
+	const secret = process.env.JWT_SECRET;
+
+	const options = {
+		expiresIn: "120m",
+	};
+	return jwt.sign(payload, secret, options);
+}
+
 function login(req, res) {
-	// implement user login
+	const userInfo = req.body;
+
+	db("users")
+		.where({ username: userInfo.username })
+		.first()
+		.then(user => {
+			if (user && bcrypt.compareSync(userInfo.password, user.password)) {
+				const token = generateToken(user);
+				res.status(200).json({
+					message: user.username,
+					token: token,
+				});
+			} else {
+				res.status(401).json({
+					message:
+						"You shall not pass! Incorrect username and/or password.",
+				});
+			}
+		})
+		.catch(err =>
+			res.status(500).json({
+				err,
+				message: "There has been an error on the Login POST endpoint",
+			})
+		);
 }
 
 function getJokes(req, res) {
