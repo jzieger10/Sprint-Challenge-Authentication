@@ -12,19 +12,21 @@ class JokesList extends React.Component {
 	async componentDidMount() {
 		const endpoint = `http://localhost:3300/api/jokes`;
 		const token = localStorage.getItem("token");
-		console.log(endpoint);
-		if (token) {
-			try {
-				const response = await axios.get(endpoint);
-				this.setState({ jokes: response.data });
-			} catch (err) {
-				console.error("There has been an error at JokesList CDM", err);
-			}
+		try {
+			const response = await axios.get(endpoint, {
+				headers: {
+					authorization: token,
+				},
+			});
+			console.log(response);
+			this.setState({ jokes: response.data });
+		} catch (err) {
+			console.error("There has been an error at JokesList CDM", err);
 		}
 	}
 
 	logOut = () => {
-		window.localStorage.removeItem("username");
+		window.localStorage.removeItem("token");
 		window.location.reload();
 	};
 
